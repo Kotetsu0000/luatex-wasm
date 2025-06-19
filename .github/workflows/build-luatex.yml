@@ -36,7 +36,7 @@ jobs:
       # 4. TeX Liveの最新ソースコードをダウンロードして展開
       - name: Download and extract TeX Live source
         run: |
-          wget -q https://tug.org/historic/systems/texlive/2024/texlive-20240312-source.tar.xz
+          wget -q https://ftp.math.utah.edu/pub/tex/historic/systems/texlive/2025/texlive-20250308-source.tar.xz
           tar -xf texlive-20240312-source.tar.xz
           # 分かりやすいようにディレクトリ名を変更
           mv texlive-20240312-source texlive-source
