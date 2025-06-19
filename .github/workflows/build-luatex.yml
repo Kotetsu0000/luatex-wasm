@@ -44,8 +44,9 @@ jobs:
       # 5. LuaTeXをWebAssemblyにビルド
       - name: Build LuaTeX with Emscripten
         run: |
-          echo "Forcefully removing LuaJIT source directory to prevent its configuration..."
-          rm -rf texlive-source/libs/luajit
+          echo "Neutralizing LuaJIT's configure script to bypass build process..."
+          echo -e "#!/bin/sh\nexit 0" > texlive-source/libs/luajit/configure
+          chmod +x texlive-source/libs/luajit/configure
           
           mkdir build
           cd build
