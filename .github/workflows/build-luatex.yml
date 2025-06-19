@@ -47,9 +47,16 @@ jobs:
           EM_CFLAGS: "-s USE_FREETYPE=1 -s USE_ZLIB=1 -s USE_HARFBUZZ=1"
           EM_LDFLAGS: "-s USE_FREETYPE=1 -s USE_ZLIB=1 -s USE_HARFBUZZ=1"
         run: |
-          echo "Neutralizing LuaJIT's configure script to bypass build process..."
-          echo -e "#!/bin/sh\nexit 0" > texlive-source/libs/luajit/configure
-          chmod +x texlive-source/libs/luajit/configure
+          problematic_libs=("luajit" "freetype2" "harfbuzz" "zlib")
+          
+          for lib in "${problematic_libs[@]}"; do
+            if [ -d "texlive-source/libs/$lib" ]; then
+              echo "Neutralizing build process for $lib..."
+              # configure スクリプトを無力化
+              echo -e "#!/bin/sh\nexit 0" > "texlive-source/libs/$lib/configure"
+              chmod +x "texlive-source/libs/$lib/configure"
+            fi
+          done
           
           mkdir build
           cd build
@@ -69,10 +76,13 @@ jobs:
             --enable-web2c \
             --enable-luatex
 
-          echo "Creating dummy Makefile for LuaJIT to prevent 'make' error..."
-          mkdir -p libs/luajit
-          echo -e "all:\n\t@echo \"LuaJIT make skipped successfully.\"" > libs/luajit/Makefile
-          echo -e "install:\n\t@echo \"LuaJIT install skipped successfully.\"" >> libs/luajit/Makefile
+          for lib in "${problematic_libs[@]}"; do
+             if [ -d "libs/$lib" ]; then
+               echo "Creating dummy Makefile for $lib..."
+               echo -e "all:\n\t@echo \"$lib make skipped.\"" > "libs/$lib/Makefile"
+               echo -e "install:\n\t@echo \"$lib install skipped.\"" >> "libs/$lib/Makefile"
+             fi
+          done
           
           emmake make
 
