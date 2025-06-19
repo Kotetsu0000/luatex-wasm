@@ -56,7 +56,8 @@ jobs:
             --without-x \
             --enable-kpathsea \
             --enable-web2c \
-            --enable-luatex
+            --enable-luatex \
+            --disable-luajittex
           
           emmake make
 
