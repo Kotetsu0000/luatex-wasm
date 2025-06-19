@@ -43,6 +43,9 @@ jobs:
       
       # 5. LuaTeXをWebAssemblyにビルド
       - name: Build LuaTeX with Emscripten
+        env:
+          EM_CFLAGS: "-s USE_FREETYPE=1 -s USE_ZLIB=1 -s USE_HARFBUZZ=1"
+          EM_LDFLAGS: "-s USE_FREETYPE=1 -s USE_ZLIB=1 -s USE_HARFBUZZ=1"
         run: |
           echo "Neutralizing LuaJIT's configure script to bypass build process..."
           echo -e "#!/bin/sh\nexit 0" > texlive-source/libs/luajit/configure
