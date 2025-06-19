@@ -65,6 +65,10 @@ jobs:
             --enable-kpathsea \
             --enable-web2c \
             --enable-luatex
+
+          echo "Creating dummy Makefile for LuaJIT..."
+          echo -e "all:\n\t@echo \"LuaJIT make skipped successfully.\"" > libs/luajit/Makefile
+          echo -e "install:\n\t@echo \"LuaJIT install skipped successfully.\"" >> libs/luajit/Makefile
           
           emmake make
 
