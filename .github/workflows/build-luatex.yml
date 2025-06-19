@@ -1,0 +1,92 @@
+name: Build LuaTeX to WASM and Deploy
+
+# ワークフローの実行トリガーを設定
+on:
+  # 1. 週に一度、日曜日の午前3時(UTC)に定期実行
+  schedule:
+    - cron: '0 3 * * 0'
+  
+  # 2. 手動でワークフローを実行できるようにする (Actionsタブから)
+  workflow_dispatch:
+
+# GitHub Actionsがリポジトリに書き込みできるように権限を設定
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. このリポジトリのコードをチェックアウト
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Emscripten (C++ to WASM コンパイラ) をセットアップ
+      - name: Setup Emscripten
+        uses: emscripten-core/setup-emscripten@v3
+        with:
+          # 特定のバージョンを指定することで、安定したビルド環境を維持
+          emscripten-version: '3.1.55'
+
+      # 3. ビルドに必要な依存パッケージをインストール
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y texinfo
+
+      # 4. TeX Liveの最新ソースコードをダウンロードして展開
+      # ここでは毎年更新されるソースのtarballを取得する例を示します
+      - name: Download and extract TeX Live source
+        run: |
+          wget -q https://tug.org/historic/systems/texlive/2024/texlive-20240312-source.tar.xz
+          tar -xf texlive-20240312-source.tar.xz
+          # 分かりやすいようにディレクトリ名を変更
+          mv texlive-20240312-source texlive-source
+      
+      # 5. LuaTeXをWebAssemblyにビルド
+      # このステップが最も複雑で、環境に応じた調整が必要です
+      - name: Build LuaTeX with Emscripten
+        run: |
+          cd texlive-source
+          # LuaTeXとその依存ライブラリのみをビルド対象とする最小構成を設定
+          # --disable-all-pkgs で一度全てを無効化し、--enable-luatex でluatexを有効化するのが基本方針
+          # 依存関係(kpathsea, ptexencなど)も有効にする必要がある場合があります
+          emconfigure ./configure \
+            --disable-all-pkgs \
+            --enable-luatex \
+            --disable-largefile \
+            --without-x
+          
+          # luatexターゲットのみをビルド
+          # これにより、texk/web2c ディレクトリ内でビルドが実行されます
+          emmake make -C texk/web2c luatex
+
+      # 6. 公開用のディレクトリとファイルを作成
+      - name: Prepare artifacts for deployment
+        run: |
+          # 公開用のディレクトリを作成
+          mkdir -p public
+          
+          # ビルドされたWASMとJSファイルをコピー
+          # パスはビルド構成によって変わる可能性があります
+          cp texlive-source/texk/web2c/luatex.js public/
+          cp texlive-source/texk/web2c/luatex.wasm public/
+          
+          # ダウンロードページとなる簡単なHTMLを作成
+          echo "<html>" > public/index.html
+          echo "<head><title>LuaTeX WASM Build</title></head>" >> public/index.html
+          echo "<body>" >> public/index.html
+          echo "<h1>LuaTeX WASM Build</h1>" >> public/index.html
+          echo "<p>Last updated: $(date -u)</p>" >> public/index.html
+          echo '<ul>' >> public/index.html
+          echo '<li><a href="luatex.js">luatex.js</a></li>' >> public/index.html
+          echo '<li><a href="luatex.wasm">luatex.wasm</a></li>' >> public/index.html
+          echo '</ul>' >> public/index.html
+          echo "</body></html>" >> public/index.html
+
+      # 7. ビルド成果物をGitHub Pagesにデプロイ
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          # Actionsが自動生成するトークン
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # 公開するディレクトリを指定
+          publish_dir: ./public
