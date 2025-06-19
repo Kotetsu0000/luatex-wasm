@@ -37,9 +37,9 @@ jobs:
       - name: Download and extract TeX Live source
         run: |
           wget -q https://ftp.math.utah.edu/pub/tex/historic/systems/texlive/2025/texlive-20250308-source.tar.xz
-          tar -xf texlive-20240312-source.tar.xz
+          tar -xf texlive-20250308-source.tar.xz
           # 分かりやすいようにディレクトリ名を変更
-          mv texlive-20240312-source texlive-source
+          mv texlive-20250308-source texlive-source
       
       # 5. LuaTeXをWebAssemblyにビルド
       - name: Build LuaTeX with Emscripten
