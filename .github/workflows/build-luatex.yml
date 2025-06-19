@@ -54,10 +54,13 @@ jobs:
             --disable-largefile \
             --disable-ipc \
             --without-x \
+            --disable-luajit \
+            --disable-zlib \
+            --disable-graphite2 \
+            --disable-harfbuzz \
             --enable-kpathsea \
             --enable-web2c \
-            --enable-luatex \
-            --disable-luajit
+            --enable-luatex
           
           emmake make
 
