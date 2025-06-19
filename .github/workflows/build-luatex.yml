@@ -44,11 +44,10 @@ jobs:
       # 5. LuaTeXをWebAssemblyにビルド
       - name: Build LuaTeX with Emscripten
         run: |
-          cd texlive-source
+          mkdir build
+          cd build
           
-          #【修正点】LuaTeXのビルドに最低限必要な依存関係(kpathsea, web2c)を明示的に有効化します。
-          # これにより、configure(ビルド設定)の成功率を高めます。
-          emconfigure ./configure \
+          emconfigure ../texlive-source/configure \
             --disable-all-pkgs \
             --disable-shared \
             --enable-static \
@@ -59,9 +58,7 @@ jobs:
             --enable-web2c \
             --enable-luatex
           
-          # luatexターゲットのみをビルドします。
-          # makeコマンドは、ビルド対象のディレクトリ(-C)とターゲット(luatex)を指定して実行します。
-          emmake make -C texk/web2c luatex
+          emmake make
 
       # 6. 公開用のディレクトリとファイルを作成
       - name: Prepare artifacts for deployment
