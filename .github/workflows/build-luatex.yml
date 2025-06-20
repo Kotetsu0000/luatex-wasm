@@ -49,10 +49,10 @@ jobs:
         run: |
           problematic_libs=("luajit" "freetype2" "harfbuzz" "zlib")
           
+          problematic_libs=("luajit" "freetype2" "harfbuzz" "zlib" "graphite2")
           for lib in "${problematic_libs[@]}"; do
             if [ -d "texlive-source/libs/$lib" ]; then
-              echo "Neutralizing build process for $lib..."
-              # configure スクリプトを無力化
+              echo "Neutralizing configure script for $lib..."
               echo -e "#!/bin/sh\nexit 0" > "texlive-source/libs/$lib/configure"
               chmod +x "texlive-source/libs/$lib/configure"
             fi
@@ -65,26 +65,15 @@ jobs:
             --disable-all-pkgs \
             --disable-shared \
             --enable-static \
-            --disable-largefile \
-            --disable-ipc \
-            --without-x \
-            --disable-luajit \
-            --disable-zlib \
-            --disable-graphite2 \
-            --disable-harfbuzz \
             --enable-kpathsea \
             --enable-web2c \
             --enable-luatex
 
-          for lib in "${problematic_libs[@]}"; do
-             if [ -d "libs/$lib" ]; then
-               echo "Creating dummy Makefile for $lib..."
-               echo -e "all:\n\t@echo \"$lib make skipped.\"" > "libs/$lib/Makefile"
-               echo -e "install:\n\t@echo \"$lib install skipped.\"" >> "libs/$lib/Makefile"
-             fi
-          done
-          
-          emmake make
+          echo "Building dependencies (kpathsea)..."
+          emmake make -C texk/kpathsea
+
+          echo "Building luatex executable..."
+          emmake make -C texk/web2c luatex
 
       # 6. 公開用のディレクトリとファイルを作成
       - name: Prepare artifacts for deployment
