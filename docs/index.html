@@ -1,0 +1,343 @@
+<!doctype html>
+<!--
+Copyright (c) 2026 kotetsu0000
+SPDX-License-Identifier: GPL-2.0-only
+-->
+
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LuaTeX WASM Playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f6f1e8;
+        --bg-2: #e9f1ff;
+        --ink: #1c2430;
+        --muted: #5a6470;
+        --accent: #2d6a4f;
+        --accent-2: #f4a261;
+        --card: #ffffffcc;
+        --border: #d9dee7;
+        --shadow: 0 20px 40px rgba(16, 24, 40, 0.12);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "Space Grotesk", system-ui, -apple-system, sans-serif;
+        color: var(--ink);
+        min-height: 100vh;
+        background:
+          radial-gradient(80% 60% at 10% 10%, #fff3e5 0%, transparent 60%),
+          radial-gradient(70% 70% at 90% 5%, #dff4ff 0%, transparent 55%),
+          linear-gradient(160deg, var(--bg), var(--bg-2));
+      }
+      header {
+        padding: 32px clamp(20px, 4vw, 48px) 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      header h1 {
+        margin: 0;
+        font-size: clamp(24px, 3.5vw, 36px);
+        letter-spacing: -0.02em;
+      }
+      header p {
+        margin: 6px 0 0;
+        color: var(--muted);
+      }
+      .badge {
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: #0b1320;
+        color: #fff;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+      }
+      main {
+        padding: 0 clamp(20px, 4vw, 48px) 48px;
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+        gap: 24px;
+      }
+      .panel {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 20px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(8px);
+      }
+      .panel h2 {
+        margin: 0 0 12px;
+        font-size: 18px;
+      }
+      .editor {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        height: 100%;
+      }
+      textarea {
+        width: 100%;
+        min-height: 320px;
+        resize: vertical;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        padding: 14px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 13px;
+        line-height: 1.6;
+        background: #0e1623;
+        color: #e6edf5;
+      }
+      .actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .file-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .style-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 10px 12px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: #f6f5ef;
+      }
+      .style-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .style-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: #fff;
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .style-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .style-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: #ffffff;
+        font-size: 12px;
+      }
+      .style-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .style-name {
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .style-meta {
+        color: var(--muted);
+      }
+      .style-remove {
+        appearance: none;
+        border: 1px solid #e07a5f;
+        background: #fff;
+        color: #b23a2d;
+        border-radius: 999px;
+        padding: 6px 12px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .style-empty {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .file-button {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--ink);
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .file-button input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+      }
+      button {
+        appearance: none;
+        border: none;
+        border-radius: 999px;
+        padding: 10px 18px;
+        font-weight: 600;
+        background: linear-gradient(135deg, var(--accent), #40916c);
+        color: white;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+      button:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(45, 106, 79, 0.3);
+      }
+      button.ghost {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--ink);
+      }
+      button.ghost:hover:not(:disabled) {
+        box-shadow: 0 10px 20px rgba(28, 36, 48, 0.15);
+      }
+      .status {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .log {
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        background: #f7f9fc;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        padding: 12px;
+        min-height: 140px;
+        max-height: 240px;
+        overflow: auto;
+      }
+      .output-frame {
+        width: 100%;
+        height: 420px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: #fff;
+      }
+      .download {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        color: var(--ink);
+        text-decoration: none;
+      }
+      .download span {
+        color: var(--accent);
+      }
+      @media (max-width: 960px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+      }
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .panel {
+        animation: fadeUp 0.6s ease both;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <div class="badge">LuaTeX WASM</div>
+        <h1>LuaLaTeX + emath Playground</h1>
+        <p>WebAssembly 上で LuaLaTeX を起動し、PDF を生成します。</p>
+      </div>
+      <div class="status" id="status">ready</div>
+    </header>
+    <main>
+      <section class="panel editor">
+        <h2>Source</h2>
+        <textarea id="source"></textarea>
+        <div class="actions">
+          <div class="file-actions">
+            <label class="file-button">
+              Load .tex
+              <input id="file-input" type="file" accept=".tex" />
+            </label>
+          </div>
+        </div>
+        <div class="style-panel">
+          <div class="file-actions">
+            <label class="file-button">
+              Add .sty files
+              <input id="style-input" type="file" accept=".sty" multiple />
+            </label>
+            <div class="status">読み込んだスタイルは一覧に表示されます。</div>
+          </div>
+          <div class="style-header">
+            <span>Loaded styles</span>
+            <span id="style-count" class="style-count">0</span>
+          </div>
+          <div id="style-list" class="style-list"></div>
+        </div>
+        <div class="actions">
+          <button id="run">Compile</button>
+          <div class="status" id="hint">初回はフォーマットとフォントのロードに時間がかかります。</div>
+        </div>
+        <div class="log" id="log"></div>
+      </section>
+      <section class="panel">
+        <h2>Output</h2>
+        <iframe id="pdf-frame" class="output-frame"></iframe>
+        <div class="actions" style="margin-top: 12px;">
+          <a id="download" class="download" href="#" download="output.pdf">
+            <span>Download</span> PDF
+          </a>
+          <div class="status" id="meta"></div>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
