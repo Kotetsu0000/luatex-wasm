@@ -22,61 +22,39 @@ const BUILD_ID = Date.now().toString();
 const styleFiles = new Map();
 
 const defaultSource = String.raw`\documentclass[a4paper,11pt]{ltjsarticle}
-
-% 数式
 \usepackage{amsmath,amssymb}
-
-% emath（例：\bunsuu など）
 \usepackage{emath}
-
-% TikZ
 \usepackage{tikz}
 \usetikzlibrary{calc}
-
 \begin{document}
-
 \section{日本語と emath の使用例}
 これは Lua\TeX{}（Lua\LaTeX）でコンパイルできるサンプルです。日本語も含みます。
-
 次の式は emath の分数マクロ \verb|\bunsuu| を使っています：
 \[
   \bunsuu{1}{2} + \bunsuu{1}{3} = \bunsuu{5}{6}
 \]
-
 \section{TikZ による幾何学模様}
 \begin{center}
 \begin{tikzpicture}[scale=3, line join=round, line cap=round]
-  % 外接円
   \draw (0,0) circle [radius=1];
-
-  % 12本の半径（放射状）
   \foreach \a in {0,30,...,330}{
     \draw (0,0) -- (\a:1);
   }
-
-  % 星形多角形（12点を飛び飛びに結ぶ）
   \foreach \a in {0,30,...,330}{
     \draw (\a:1) -- (\a+150:1);
   }
-
-  % ロゼット（花弁状）：内側円周上の点を中心とする同半径円を重ねる
   \foreach \a in {0,30,...,330}{
     \draw (\a:0.5) circle [radius=0.5];
   }
-
-  % 中央の正六角形
   \foreach \a/\name in {0/H0,60/H1,120/H2,180/H3,240/H4,300/H5}{
     \coordinate (\name) at (\a:0.55);
   }
   \draw (H0)--(H1)--(H2)--(H3)--(H4)--(H5)--cycle;
 \end{tikzpicture}
 \end{center}
-
 \section{日本語の説明}
 上の図は、円周上の12点を放射状に結び、星形多角形とロゼット（花弁）を重ねた幾何学模様です。
-
-\end{document}
-`;
+\end{document}`;
 
 sourceEl.value = defaultSource;
 
