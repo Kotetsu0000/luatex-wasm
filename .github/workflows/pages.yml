@@ -28,12 +28,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           rm -f docs/lualatex.fmt docs/luatex.data docs/luatex.js docs/luatex.wasm
-          gh release download --repo "$GITHUB_REPOSITORY" --dir docs \
+          tag="$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName)"
+          gh release download "$tag" --repo "$GITHUB_REPOSITORY" --dir docs \
             --pattern 'lualatex.fmt' \
             --pattern 'luatex.data' \
             --pattern 'luatex.js' \
             --pattern 'luatex.wasm' \
-            --latest
+            
           ls -la docs
 
       - name: Setup Pages
